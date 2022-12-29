@@ -7,6 +7,14 @@
  * http://opensource.org/licenses/mit-license.php
  **/
 (function(root) {
+    class MyError extends Error {
+
+        constructor(message) {
+            super(message);
+        }
+
+    }
+
     function BigIntLib(opt) {
         const MAX_SAFE_INTEGER = BigInt(Number.MAX_SAFE_INTEGER);
         const randomGenerator = opt && opt.random ? opt.random() : (function*() {
@@ -347,7 +355,7 @@
 
         function invert(x) {
             if(isZero(x)) {
-                throw new Error("divide by zero");
+                throw new MyError("divide by zero");
             }
             return makeRational(denom(x), numer(x));
         }
@@ -372,7 +380,7 @@
 
         function divide(x, y) {
             if(isZero(y)) {
-                throw new Error("divide by zero");
+                throw new MyError("divide by zero");
             }
             return isZero(x)
                    ? zero
@@ -1107,7 +1115,7 @@
 
         function expandAndToString(x, num) {
             if(num <= 0) {
-                throw new Error("expansion count must be positve");
+                throw new MyError("expansion count must be positve");
             }
 
             const result = contfrac(scaleRational(x, num * 5));
@@ -1222,7 +1230,7 @@
             const result = parser(code, 0, null);
 
             if(result === null) {
-                throw new Error("Syntax error");
+                throw new MyError("Syntax error");
             }
             return result.attr();
         }
@@ -1879,6 +1887,7 @@
     }
 
     const lib = {
+        MyError: MyError,
         B: B,
         rat: rat,
         ratT: ratT,
