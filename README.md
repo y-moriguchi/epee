@@ -39,3 +39,13 @@ Unary minus, additon, multiplication, subtraction and division are supported.
 scale(-2*pi + 1/3/e - 1, 20)
 ```
 
+### Representation of rational number
+
+Representation of rational number can be expressed by fraction form, decimal form and continued fraction form.
+
+```
+scale(1 / 3, 10)
+scale(0.333, 10)
+scale([1;2,2,2], 10)
+```
+

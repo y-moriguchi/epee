@@ -1105,6 +1105,22 @@
             return makeSingleFactorTerm(rat.makeRational(1n, 1n), 1, 0);
         }
 
+        function makeRationalCF(terms) {
+            let an = 0, bn = terms[0];
+            let A1 = 1, B1 = 0, An = bn, Bn = 1;
+
+            for(let i = 1; i < terms.length; i++) {
+                const ta = An, tb = Bn;
+                an = 1n;
+                bn = terms[i];
+                An = rat.add(rat.multiply(bn, An), rat.multiply(an, A1));
+                Bn = rat.add(rat.multiply(bn, Bn), rat.multiply(an, B1));
+                A1 = ta;
+                B1 = tb;
+            }
+            return makeSingleFactorTerm(rat.divide(An, Bn), 0, 0);
+        }
+
         function makeCompare(op, x, y) {
             return {
                 tag: op,
@@ -1199,10 +1215,20 @@
                     return "1" + iter("", d.length);
                 }
 
+                const rationalCFTermInt = P.action(/[\+\-]?[0-9]+/, (m, s, i) => BigInt(m));
+                const rationalCFTerm = P.action(/[0-9]+/, (m, s, i) => BigInt(m));
+                const rationalCF = P.action(P.concat(
+                    "[",
+                    P.action(rationalCFTermInt, (m, s, i) => [s]),
+                    ";",
+                    P.action(rationalCFTerm, (m, s, i) => i.concat([s])),
+                    P.zeroOrMore(P.action(P.concat(",", rationalCFTerm), (m, s, i) => i.concat([s]))),
+                    "]"), (m, s, i) => makeRationalCF(s));
                 const element = P.choice(
                     P.concat("(", x, ")"),
                     P.action("pi", (m, s, i) => makePi()),
                     P.action("e", (m, s, i) => makeE()),
+                    rationalCF,
                     P.action(/[0-9]+\.[0-9]+/, (m, s, i) => {
                         const splitted = m.split(".");
 
@@ -1848,15 +1874,28 @@
             return scaleRat(x);
         } else {
             const d = 10n ** (BigInt(digits) + 5n);
+            let lastValue = null;
 
             while(true) {
-                const rn = x.next().value;
-                const rn1 = x.next().value;
-                const on = order(rn, d);
-                const on1 = order(rn1, d);
+                const g1 = x.next();
+
+                if(g1.done) {
+                    return lastValue;
+                }
+
+                const g2 = x.next();
+
+                if(g2.done) {
+                    return g1.value;
+                }
+
+                const on = order(g1.value, d);
+                const on1 = order(g2.value, d);
 
                 if(on / 100000n === on1 / 100000n) {
                     return on / 100000n;
+                } else {
+                    lastValue = g2.value;
                 }
             }
         }
